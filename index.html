@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+        <title>Avengers</title>
+
+        <link rel="stylesheet" href="assets/css/fonts.css">
+        <link rel="stylesheet" href="assets/css/main.css">
+    </head>
+
+    <body>
+        <div class="blur hidden"></div>
+        <div class="start-screen hidden">
+            <h1 class="title">Avengers</h1>
+            <hr class="im" noshade="">
+            <p class="description">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ad aliquid asperiores
+                assumenda distinctio eaque earum, ex fugiat, hic illum minima minus mollitia odit officiis optio porro
+                quasi reprehenderit totam voluptates?</p>
+
+            <div class="character-picker">
+                <div class="character im picked">
+                    <img class="character__img" src="assets/img/sprites/iron-man_front.png" alt="">
+                    <p class="character__name">Железный человек</p>
+                </div>
+
+                <div class="character ca">
+                    <img class="character__img" src="assets/img/sprites/captain-america_front.png" alt="">
+                    <p class="character__name">Капитан Америка</p>
+                </div>
+            </div>
+
+            <form class="form">
+                <label>Введите имя</label>
+                <input class="form__input im" type="text" name="name">
+
+                <p class="alert__message hidden"></p>
+
+                <button class="form__btn im" name="start">Начать игру</button>
+            </form>
+        </div>
+
+        <div class="game-top">
+            <div class="player-info">
+                <div class="player-stats">
+                    <img class="player__profile" src="assets/img/sprites/iron-man_profile.png" alt="Player">
+
+                    <div class="player-text">
+                        <h2 class="player__name">Тварына</h2>
+                        <p class="score">Счёт: <span class="points">1000</span></p>
+                    </div>
+                </div>
+
+                <div class="hp">
+                    <div class="hp-line">100 HP</div>
+                </div>
+            </div>
+
+            <h2 class="timer">
+                <span class="minutes">00</span>:<span class="seconds">00</span>
+            </h2>
+
+            <div class="boss-info hidden">
+                <div class="boss-stats">
+                    <div class="boss-text">
+                        <h2 class="boss__name">Тварына</h2>
+                    </div>
+
+                    <img class="boss__profile" src="assets/img/sprites/iron-man_profile.png" alt="Player">
+                </div>
+
+                <div class="boss-hp">
+                    <div class="hp-line">100 HP</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-zone"></div>
+
+        <script src="assets/js/jquery-3.4.1.min.js"></script>
+        <script src="assets/js/game.js"></script>
+    </body>
+</html>

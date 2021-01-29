@@ -20,6 +20,19 @@ $('.form__btn[name="start"]').click(function (e) {
         playerStats.hp = 100;
         playerStats.points = 0;
 
+        if (playerStats.character === 1) {
+            $('.character__img').attr({
+                src: sprites.im_profile,
+            });
+        } else {
+            $('.character__img').attr({
+                src: sprites.ca_profile,
+            });
+        }
+
+        $('.player__name').text(playerStats.name);
+        $('.points').text(playerStats.points);
+
         $('.blur').addClass('hidden');
         $('.start-screen').addClass('hidden');
 
@@ -125,6 +138,28 @@ const startIntervals = () => {
             bullet.style.left = `${bullet.getBoundingClientRect().left - playerWeapon.speed}px`;
         });
     }, fps);
+
+
+    intervals.timer = setInterval(() => {
+        timer.seconds ++;
+
+        if (timer.seconds >= 60) {
+            timer.minutes ++;
+            timer.seconds = 0;
+        }
+
+        if (timer.seconds < 10) {
+            $('.seconds').text(`0${timer.seconds}`);
+        } else {
+            $('.seconds').text(`${timer.seconds}`);
+        }
+
+        if (timer.minutes < 10) {
+            $('.minutes').text(`0${timer.minutes}`);
+        } else {
+            $('.minutes').text(`${timer.minutes}`);
+        }
+    }, 1000);
 };
 
 /*
@@ -233,13 +268,18 @@ let player,
         width: gameZone.getBoundingClientRect().width,
         center: 0
     },
+    timer = {
+        minutes: 0,
+        seconds: 0
+    },
     intervals = {
         player: {
             run: '',
             jump: '',
             sprite: '',
             bullets: ''
-        }
+        },
+        timer: ''
     },
     bgPos = 0,
     fps = 1000 / 60;
@@ -278,4 +318,4 @@ $('.character.ca').click(function () {
     $('.form__btn').addClass('ca');
 });
 
-game();
+//game();

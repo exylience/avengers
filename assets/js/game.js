@@ -1,25 +1,26 @@
 /*
-    Query selector
- */
+    Получаем доступ к нужному объекту DOM по классу
+  */
 const select = (selector, all = false) => {
     return (all) ? document.querySelectorAll(selector) : document.querySelector(selector);
 };
 
 /*
-    Start game
+    Старт игры по нажатию на кнопку "Начать игру"
  */
 $('.form__btn[name="start"]').click(function (e) {
-    e.preventDefault();
+    e.preventDefault(); // отключаем стандартное поведение формы
 
-    let name = $('.form__input[name="name"]').val();
-    if (name === "") {
-        $('.alert__message').text('Имя должно быть заполнено!');
+    let name = $('.form__input[name="name"]').val(); // получаем имя игрока из формы
+    if (name === "") { // проверка заполненения имени
+        $('.alert__message').text('Имя должно быть заполнено!'); // если поле пустое, выдаем ошибку
         $('.alert__message').removeClass('hidden');
-    } else {
-        playerStats.name = name;
-        playerStats.hp = 100;
-        playerStats.points = 0;
+    } else { // если всё ок
+        playerStats.name = name; // заносим в объект с инфой об игре имя
+        playerStats.hp = 100; // ставим очки здоровья по умолчанию
+        playerStats.points = 0; // обнуляем счёт
 
+        // в зависимости от выбранного персонажа меняем изображение профиля
         if (playerStats.character === 1) {
             $('.character__img').attr({
                 src: sprites.im_profile,
@@ -30,47 +31,51 @@ $('.form__btn[name="start"]').click(function (e) {
             });
         }
 
+        // выводим нужные данные в интерфейс
         $('.player__name').text(playerStats.name);
         $('.points').text(playerStats.points);
 
+        // закрываем стартовый экран
         $('.blur').addClass('hidden');
         $('.start-screen').addClass('hidden');
 
-        game();
+        game(); // начинаем игру
     }
 });
 
 /*
-    Controls
+    Управление
  */
 const controls = () => {
+    // отлавливаем моменты нажатия на кнопку
     document.body.addEventListener('keydown', (e) => {
-        console.log(e.keyCode);
+        //console.log(e.keyCode);
 
         switch (e.keyCode) {
-            case 39: // right
+            case 39: // нажата стрелка вправо
                 playerRun.status = true;
                 playerRun.right = true;
                 break;
-            case 37: // left
+            case 37: // нажата стрелка влево
                 playerRun.status = true;
                 playerRun.right = false;
                 break;
-            case 38: // jump
+            case 38: // нажата стрелка вверх
                 if (playerStats.pos.y === 0) playerJump.status = true;
                 break;
-            case 32: // attack
+            case 32: // нажат пробел
                 attack();
                 break;
         }
     });
 
+    // отлавливаем момент отпускания кнопки
     document.body.addEventListener('keyup', (e) => {
         switch (e.keyCode) {
-            case 39: // right
+            case 39: // отпущена стрелка вправо
                 playerRun.status = false;
                 break;
-            case 37: // left
+            case 37: // отпущена стрелка влево
                 playerRun.status = false;
                 break;
         }
@@ -132,10 +137,31 @@ const startIntervals = () => {
         }
     }, fps);
     intervals.player.bullets = setInterval(() => {
-        let bullets = select('.bullet', true);
+        let bulletsLeft = select('.bullet.left', true),
+            bulletsRight = select('.bullet.right', true);
 
-        bullets.forEach((bullet) => {
+        const bulletStartPos = playerStats.pos.x;
+
+        bulletsLeft.forEach((bullet) => {
             bullet.style.left = `${bullet.getBoundingClientRect().left - playerWeapon.speed}px`;
+
+            if (
+                bullet.getBoundingClientRect().left < bulletStartPos - 300 ||
+                bullet.getBoundingClientRect().left < 0
+            ) {
+                gameZone.removeChild(bullet);
+            }
+        });
+
+        bulletsRight.forEach((bullet) => {
+            bullet.style.left = `${bullet.getBoundingClientRect().left + playerWeapon.speed}px`;
+
+            if (
+                bullet.getBoundingClientRect().left > bulletStartPos + 300 ||
+                bullet.getBoundingClientRect().left > gameZoneStats.width
+            ) {
+                gameZone.removeChild(bullet);
+            }
         });
     }, fps);
 
@@ -168,10 +194,10 @@ const startIntervals = () => {
 const attack = () => {
     if (playerStats.character === 1) {
         gameZone.innerHTML += `<div 
-            class="bullet impulse" 
+            class="bullet impulse ${(playerRun.right) ? 'right' : 'left'}" 
             style="background-image: url(${playerWeapon.sprite}); top: ${playerStats.pos.y + (playerStats.height / 2 - 10)}px;left: ${playerStats.pos.x + (playerStats.width / 2)}px;width:${playerWeapon.width}px;height: ${playerWeapon.height}px"></div>`;
     } else {
-        gameZone.innerHTML += `<div class="bullet shield"
+        gameZone.innerHTML += `<div class="bullet shield ${(playerRun.right) ? 'right' : 'left'}"
             style="background-image: url(${playerWeapon.sprite}); top: ${playerStats.pos.y + (playerStats.height / 2 - 10)}px;left: ${playerStats.pos.x + (playerStats.width / 2)}px;width:${playerWeapon.width}px;height: ${playerWeapon.height}px"></div>`;
     }
 
@@ -224,6 +250,7 @@ const sprites = {
     shield: "assets/img/sprites/shield.png",
 };
 
+
 /*
     All params, options
  */
@@ -259,7 +286,7 @@ let player,
     playerWeapon = {
         type: 'impulse',
         sprite: '',
-        speed: '',
+        speed: 10,
         width: 0,
         height: 0
     },
@@ -318,4 +345,4 @@ $('.character.ca').click(function () {
     $('.form__btn').addClass('ca');
 });
 
-//game();
+game();

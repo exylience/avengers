@@ -6,6 +6,38 @@ const select = (selector, all = false) => {
 };
 
 /*
+    Получаем рандомное целое число из заданного диапазона
+*/
+const random = (min, max) => {
+    let rand = min + Math.random() * (max - min);
+    return Math.round(rand);  
+};
+
+/*
+    Функция для отправки запроса к API
+*/
+const f = async (url, method, data = null) => {
+    const API = 'http://pocket-diary.ru/api';
+
+    let options = {
+        method: method.toUpperCase(),
+        mode: 'cors',
+        headers: {
+            'Content-Type': "application/json"
+        }
+    };
+
+    if (method === "POST") options.body = data;
+
+    let response = await fetch(`${API}${url}`, options);
+
+    return {
+        body: await response.json(),
+        code: response.status
+    };
+};
+
+/*
     Старт игры по нажатию на кнопку "Начать игру"
  */
 $('.form__btn[name="start"]').click(function (e) {
@@ -83,7 +115,7 @@ const controls = () => {
 };
 
 /*
-    Intervals
+    Интервалы
  */
 const startIntervals = () => {
     intervals.player.run = setInterval(() => {
@@ -166,6 +198,115 @@ const startIntervals = () => {
     }, fps);
 
 
+    intervals.enemies.spawn = setInterval(() => {
+        const enemyCharacter = random(1, 2), // рандомно выбираем персонажа врага: 1 - Смерть, 2 - Дарт Мол
+            enemySprite = (enemyCharacter === 1) ? sprites.enemy_death_left : sprites.enemy_maul_left,
+            enemiesCount = select('.enemy', true);
+
+        if (enemiesCount.length < 5) {
+            gameZone.innerHTML += `<div class="enemy left" style="background-image: url(${enemySprite}); left: ${enemiesSpawn.spawnPosX}px; width: ${enemiesStats.width}px; height: ${enemiesStats.height}px"></div>`;
+
+            player = select('.player');
+        }
+    }, enemiesSpawn.spawnInterval);
+
+    intervals.enemies.move = setInterval(() => {
+        const enemiesLeft = select('.enemy.left', true),
+            enemiesRight = select('.enemy.right', true),
+            bulletsRight = select('.bullet.right', true);
+
+        enemiesRight.forEach((enemy) => {
+            enemy.style.left = `${enemy.getBoundingClientRect().left + enemiesStats.speed}px`; 
+
+            if (
+                enemy.getBoundingClientRect().left >= gameZoneStats.width - enemiesStats.width ||
+                playerStats.pos.x >= gameZoneStats.center
+            ) {
+                $(enemy).removeClass('right');
+                $(enemy).addClass('left');
+
+                enemy.style.backgroundImage = (enemy.style.backgroundImage === `url("${sprites.enemy_death_right}")`) ? `url(${sprites.enemy_death_left})` : `url(${sprites.enemy_maul_left})`;
+            }
+
+            // if (
+            //     enemy.getBoundingClientRect().right <= player.getBoundingClientRect().right ||
+            //     enemy.getBoundingClientRect().top <= player.getBoundingClientRect().bottom
+            // ) {
+            //     playerStats.pos.x -= 100;
+            //     player.style.left = `${playerStats.pos.x}px`;
+
+            //     enemy.style.left = `${enemy.getBoundingClientRect().left + 100}px`;
+            //     changeHP(-10);
+            // }
+
+            bulletsRight.forEach((bullet) => {
+                if (bullet.getBoundingClientRect().right >= enemy.getBoundingClientRect().left) {
+                    gameZone.removeChild(bullet);
+                    gameZone.removeChild(enemy);
+
+                    playerStats.kills ++;
+                    changePoints(enemiesStats.killAward);
+                }
+            });
+        });
+
+        enemiesLeft.forEach((enemy) => {
+            enemy.style.left = `${enemy.getBoundingClientRect().left - enemiesStats.speed}px`; 
+
+            if (
+                enemy.getBoundingClientRect().left <= gameZoneStats.center &&
+                !(playerStats.pos.x >= gameZoneStats.center)
+            ) {
+                $(enemy).removeClass('left');
+                $(enemy).addClass('right');
+
+                enemy.style.backgroundImage = (enemy.style.backgroundImage === `url("${sprites.enemy_death_left}")`) ? `url(${sprites.enemy_death_right})` : `url(${sprites.enemy_maul_right})`;
+            } 
+
+            if (
+                enemy.getBoundingClientRect().left <= player.getBoundingClientRect().right
+            ) {
+                playerStats.pos.x -= 100;
+                player.style.left = `${playerStats.pos.x}px`;
+
+                enemy.style.left = `${enemy.getBoundingClientRect().left + 100}px`;
+                changeHP(-10);
+            }
+
+            bulletsRight.forEach((bullet) => {
+                if (bullet.getBoundingClientRect().right >= enemy.getBoundingClientRect().left) {
+                    gameZone.removeChild(bullet);
+                    gameZone.removeChild(enemy);
+
+                    playerStats.kills ++;
+                    changePoints(enemiesStats.killAward);
+                }
+            });
+        });
+    }, fps);
+
+    // intervals.enemies.sprite = setInterval(() => {
+    //     const enemiesLeft = select('.enemy.left', true),
+    //         enemiesRight = select('.enemy.right', true);
+
+    //     enemiesRight.forEach((enemy) => {
+    //         enemy.style.backgroundPositionX = `${enemy.getBoundingClientRect().backgroundPositionX + enemiesStats.width}px`; 
+
+    //         if (enemy.style.backgroundPositionX > 512) {
+    //             enemy.style.backgroundPositionX = 0;
+    //         }
+    //     });
+
+    //     enemiesLeft.forEach((enemy) => {
+    //         enemy.style.backgroundPositionX = `${enemy.getBoundingClientRect().backgroundPositionX - enemiesStats.width}px`; 
+
+    //         if (enemy.style.backgroundPositionX < -512) {
+    //             enemy.style.backgroundPositionX = 0;
+    //         }
+    //     });
+    // }, 200);
+
+
     intervals.timer = setInterval(() => {
         timer.seconds ++;
 
@@ -188,8 +329,32 @@ const startIntervals = () => {
     }, 1000);
 };
 
+const stopIntervals = () => {
+    clearInterval(intervals.player.run);
+    clearInterval(intervals.player.jump);
+    clearInterval(intervals.player.sprite);
+    clearInterval(intervals.player.bullets);
+    clearInterval(intervals.enemies.spawn);
+    clearInterval(intervals.enemies.move);
+    clearInterval(intervals.enemies.sprite);
+    clearInterval(intervals.timer);
+
+    // player: {
+    //         run: '',
+    //         jump: '',
+    //         sprite: '',
+    //         bullets: ''
+    //     },
+    //     enemies: {
+    //         spawn: '',
+    //         move: '',
+    //         sprite: ''
+    //     },
+    //     timer: ''
+};
+
 /*
-    Attack
+    Атака
  */
 const attack = () => {
     if (playerStats.character === 1) {
@@ -204,8 +369,109 @@ const attack = () => {
     player = select('.player');
 };
 
+const changeHP = (hp) => {
+    playerStats.hp += hp;
+
+    $('.hp-count').text(`${playerStats.hp} HP`);
+    select('.hp-line').style.width = `${playerStats.hp}%`;
+
+    if (playerStats.hp <= 0) gameOver();
+};
+
+const changePoints = (points) => {
+    playerStats.points += points;
+
+    $('.points').text(playerStats.points);
+}
+
+const gameOver = async () => {
+    stopIntervals();
+
+    $('.end-points').text(playerStats.points * 30 - (timer.minutes * 60 + timer.seconds));
+
+    let resultId = await sendResult(),
+        results = await getAllResults();
+
+    showResults(resultId, results);
+
+    $('.blur').removeClass('hidden');
+    $('.end-screen').removeClass('hidden');
+};
+
+
+const sendResult = async () => {
+    const data = {
+        name: playerStats.name,
+        score: playerStats.points * 30 - (timer.minutes * 60 + timer.seconds)
+    };
+
+    let response = await f('/game', 'POST', JSON.stringify(data));
+
+    return response.body.record.id;
+};
+
+const getAllResults = async () => {
+    let response = await f('/game', 'GET');
+
+    return response.body.records;
+};
+
+const showResults = (playerResultId, results) => {
+    let resultsTable = select('.records');
+
+    resultsTable.innerHTML = ` 
+        <tr class="records-row ${ (playerStats.character === 1) ? 'im' : 'ca' }">
+            <th class="records-header ${ (playerStats.character === 1) ? 'im' : 'ca' } place">Место</th>
+            <th class="records-header ${ (playerStats.character === 1) ? 'im' : 'ca' } player-name">Игрок</th>
+            <th class="records-header ${ (playerStats.character === 1) ? 'im' : 'ca' } player-score">Счёт</th>
+        </tr>
+    `;
+
+    results.forEach((result, index) => {
+        if (
+            result.id !== playerResultId &&
+            index < 9
+        ) {
+            resultsTable.innerHTML += `
+                <tr class="records-row ${ (playerStats.character === 1) ? 'im' : 'ca' }">
+                    <td class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } place">${ index + 1 }</td>
+                    <td class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } player-name">${ result.name }</td>
+                    <th class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } player-score">${ result.score }</th>
+                </tr>
+            `;
+        } else if (
+            result.id === playerResultId &&
+            index < 9
+        ) {
+            resultsTable.innerHTML += `
+                <tr class="records-row current ${ (playerStats.character === 1) ? 'im' : 'ca' }">
+                    <td class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } place">${ index + 1 }</td>
+                    <td class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } player-name">${ result.name }</td>
+                    <th class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } player-score">${ result.score }</th>
+                </tr>
+            `;
+        } else if (
+            result.id !== playerResultId &&
+            index >= 9
+        ) {
+            return;
+        } else if (
+            result.id === playerResultId &&
+            index >= 9
+        ) {
+            resultsTable.innerHTML += `
+                <tr class="records-row current ${ (playerStats.character === 1) ? 'im' : 'ca' }">
+                    <td class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } place">${ index + 1 }</td>
+                    <td class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } player-name">${ result.name }</td>
+                    <th class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } player-score">${ result.score }</th>
+                </tr>
+            `;
+        }
+    });
+}
+
 /*
-    Initialization
+    Инициализация
  */
 const init = () => {
     playerStats.sprites.left = (playerStats.character === 1) ? sprites.im_left : sprites.ca_left;
@@ -225,6 +491,8 @@ const init = () => {
     playerJump.finalPos = playerStats.pos.y - playerJump.height;
 
     gameZoneStats.center = gameZoneStats.width / 2;
+
+    enemiesSpawn.spawnPosX = gameZoneStats.width - enemiesStats.width;
 };
 
 /*
@@ -237,7 +505,7 @@ const game = () => {
 };
 
 /*
-    All sprites
+    Все спрайты
  */
 const sprites = {
     im_left: "assets/img/sprites/iron-man_left.png",
@@ -248,11 +516,19 @@ const sprites = {
     ca_right: "assets/img/sprites/captain-america_right.png",
     ca_profile: "assets/img/sprites/captain-america_profile.png",
     shield: "assets/img/sprites/shield.png",
+
+    enemy_death_left: "assets/img/sprites/enemy-death_left.png",
+    enemy_death_right: "assets/img/sprites/enemy-death_right.png",
+    enemy_maul_left: "assets/img/sprites/enemy-maul_left.png",
+    enemy_maul_right: "assets/img/sprites/enemy-maul_right.png",
+
+    boss_left: "assets/img/sprites/boss_left.png",
+    boss_right: "assets/img/sprites/boss_right.png",
 };
 
 
 /*
-    All params, options
+    Все параметры, настройки
  */
 let player,
     playerStats = {
@@ -267,10 +543,11 @@ let player,
             x: 0,
             y: 0
         },
-        character: 1, // 1 - Iron Man, 2 - Captain America
-        name: '',
+        character: 1, // 1 - Железный человек, 2 - Капитан Америка
+        name: 'Тварына',
         points: 0,
-        hp: 100
+        hp: 100,
+        kills: 0,
     },
     playerRun = {
         status: false,
@@ -290,6 +567,16 @@ let player,
         width: 0,
         height: 0
     },
+    enemiesStats = {
+        speed: 5,
+        width: 520 / 4,
+        height: 176,
+        killAward: 100
+    },
+    enemiesSpawn = {
+        spawnPosX: 0,
+        spawnInterval: 2000
+    },
     gameZone = select('.game-zone'),
     gameZoneStats = {
         width: gameZone.getBoundingClientRect().width,
@@ -306,13 +593,18 @@ let player,
             sprite: '',
             bullets: ''
         },
+        enemies: {
+            spawn: '',
+            move: '',
+            sprite: ''
+        },
         timer: ''
     },
     bgPos = 0,
     fps = 1000 / 60;
 
 /*
-    Character picker
+    Механика выбора игрового персонажа
  */
 $('.character.im').click(function () {
     playerStats.character = 1;

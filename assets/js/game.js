@@ -52,7 +52,7 @@ $('.form__btn[name="start"]').click(function (e) {
         playerStats.hp = 100; // ставим очки здоровья по умолчанию
         playerStats.points = 0; // обнуляем счёт
 
-        // в зависимости от выбранного персонажа меняем изображение профиля
+        // в зависимости от выбранного персонажа меняем изображение профиля и цвет интерфейса с помощью css классов
         if (playerStats.character === 1) {
             $('.player__profile').attr({
                 src: sprites.im_profile,
@@ -122,7 +122,7 @@ const controls = () => {
                 if (playerStats.pos.y === 0) playerJump.status = true;
                 break;
             case 32: // нажат пробел
-                attack();
+                if (select('.bullet', true).length <= 1) attack();
                 break;
         }
     });
@@ -152,6 +152,19 @@ const startIntervals = () => {
                 if (playerStats.pos.x >= gameZoneStats.center) {
                     bgPos -= playerRun.step;
                     document.body.style.backgroundPositionX = `${bgPos}px`;
+
+
+                    let platforms = select('.platform', true);
+                    let enemies = select('.enemy', true);
+
+                    platforms.forEach(platform => {
+                        platform.style.left = `${platform.getBoundingClientRect().left - playerRun.step}px`; 
+                    });
+
+                    enemies.forEach(enemy => {
+                        enemy.style.left = `${enemy.getBoundingClientRect().left - playerRun.step}px`; 
+                    });
+
                 } else {
                     playerStats.pos.x += playerRun.step;
                     player.style.left = `${playerStats.pos.x}px`;
@@ -204,22 +217,45 @@ const startIntervals = () => {
             bullet.style.left = `${bullet.getBoundingClientRect().left - playerWeapon.speed}px`;
 
             if (
-                bullet.getBoundingClientRect().left < bulletStartPos - 300 ||
-                bullet.getBoundingClientRect().left < 0
+                bullet.getBoundingClientRect().left < bulletStartPos - 350
             ) {
-                gameZone.removeChild(bullet);
+                if (playerStats.character === 1) {
+                    gameZone.removeChild(bullet);
+                } else {
+                    $(bullet).removeClass('left');
+                    $(bullet).addClass('right');
+                    $(bullet).addClass('returned');
+                }
             }
+
+            if (
+                bullet.getBoundingClientRect().left < player.getBoundingClientRect().left + bullet.getBoundingClientRect().width &&
+                ($(bullet).hasClass('returned') && $(bullet).hasClass('left')) &&
+                playerStats.character === 2
+            ) gameZone.removeChild(bullet);
+            
         });
 
         bulletsRight.forEach((bullet) => {
             bullet.style.left = `${bullet.getBoundingClientRect().left + playerWeapon.speed}px`;
 
             if (
-                bullet.getBoundingClientRect().left > bulletStartPos + 300 ||
-                bullet.getBoundingClientRect().left > gameZoneStats.width
+                bullet.getBoundingClientRect().right > bulletStartPos + 350
             ) {
-                gameZone.removeChild(bullet);
+                if (playerStats.character === 1) {
+                    gameZone.removeChild(bullet);
+                } else {
+                    $(bullet).removeClass('right');
+                    $(bullet).addClass('left');
+                    $(bullet).addClass('returned');
+                }
             }
+
+            if (
+                bullet.getBoundingClientRect().right > player.getBoundingClientRect().right - bullet.getBoundingClientRect().width &&
+                ($(bullet).hasClass('returned') && $(bullet).hasClass('right')) &&
+                playerStats.character === 2
+            ) gameZone.removeChild(bullet);
         });
     }, fps);
 
@@ -229,10 +265,9 @@ const startIntervals = () => {
             enemySprite = (enemyCharacter === 1) ? sprites.enemy_death_left : sprites.enemy_maul_left,
             enemiesCount = select('.enemy', true).length,
             bossCount = select('.boss', true).length;
-
         if (
             enemiesCount < 5 &&
-            playerStats.kills % 10 !== 0
+            (playerStats.kills === 0 || playerStats.kills % 10 !== 0)
         ) {
             gameZone.innerHTML += `<div class="enemy left" style="background-image: url(${enemySprite}); left: ${enemiesSpawn.spawnPosX}px; width: ${enemiesStats.width}px; height: ${enemiesStats.height}px"></div>`;
         } 
@@ -244,7 +279,7 @@ const startIntervals = () => {
             bossStats.hp = 1000;
             bossStats.sprites.pos = 0;
 
-            gameZone.innerHTML += `<div class="boss left" style="background-image: url(${bossStats.sprites.left}); left: ${enemiesSpawn.spawnPosX}px; width: ${bossStats.width}px; height: ${bossStats.height}px"></div>`;
+            gameZone.innerHTML += `<div class="boss left" style="background-image: url(${bossStats.sprites.left}); left: ${enemiesSpawn.spawnPosX + bossStats.width}px; width: ${bossStats.width}px; height: ${bossStats.height}px"></div>`;
     
             $('.boss-hp-count').text(`${bossStats.hp} HP`);
             select('.boss-hp-line').style.width = `${bossStats.hp / 10}%`;
@@ -331,26 +366,30 @@ const startIntervals = () => {
         });
     }, fps);
 
-    // intervals.enemies.sprite = setInterval(() => {
-    //     const enemiesLeft = select('.enemy.left', true),
-    //         enemiesRight = select('.enemy.right', true);
+    intervals.enemies.sprite = setInterval(() => {
+        const enemiesLeft = select('.enemy.left', true),
+            enemiesRight = select('.enemy.right', true);
 
-    //     enemiesRight.forEach((enemy) => {
-    //         enemy.style.backgroundPositionX = `${enemy.getBoundingClientRect().backgroundPositionX + enemiesStats.width}px`; 
+        enemiesRight.forEach((enemy) => {
+            enemiesStats.bgRightPos += enemiesStats.width;
 
-    //         if (enemy.style.backgroundPositionX > 512) {
-    //             enemy.style.backgroundPositionX = 0;
-    //         }
-    //     });
+            enemy.style.backgroundPositionX = `${enemiesStats.bgRightPos}px`; 
 
-    //     enemiesLeft.forEach((enemy) => {
-    //         enemy.style.backgroundPositionX = `${enemy.getBoundingClientRect().backgroundPositionX - enemiesStats.width}px`; 
+            if (enemiesStats.bgRightPos > 512) {
+                enemiesStats.bgRightPos = 0;
+            }
+        });
 
-    //         if (enemy.style.backgroundPositionX < -512) {
-    //             enemy.style.backgroundPositionX = 0;
-    //         }
-    //     });
-    // }, 200);
+        enemiesLeft.forEach((enemy) => {
+            enemiesStats.bgLeftPos -= enemiesStats.width;
+
+            enemy.style.backgroundPositionX = `${enemiesStats.bgLeftPos}px`; 
+
+            if (enemiesStats.bgLeftPos < -512) {
+                enemiesStats.bgLeftPos = 0;
+            }
+        });
+    }, 200);
 
     intervals.boss.move = setInterval(() => {
         let bossCount = select('.boss', true).length,
@@ -466,20 +505,9 @@ const stopIntervals = () => {
     clearInterval(intervals.enemies.spawn);
     clearInterval(intervals.enemies.move);
     clearInterval(intervals.enemies.sprite);
+    clearInterval(intervals.boss.move);
+    clearInterval(intervals.boss.sprite);
     clearInterval(intervals.timer);
-
-    // player: {
-    //         run: '',
-    //         jump: '',
-    //         sprite: '',
-    //         bullets: ''
-    //     },
-    //     enemies: {
-    //         spawn: '',
-    //         move: '',
-    //         sprite: ''
-    //     },
-    //     timer: ''
 };
 
 /*
@@ -609,6 +637,23 @@ const showResults = (playerResultId, results) => {
     });
 }
 
+
+const spawnPlatforms = () => {
+    let platformSpawnPoint = 0;
+
+    for (let i = 0; i <= platformStats.count; i++) {
+        console.log(i)
+        let platformType = random(1, 2);
+
+        gameZone.innerHTML += `<div class="platform" style="background-image: url(${ (platformType === 1) ? sprites.platform_ground : sprites.platform_dirt }); left: ${ platformSpawnPoint }px;"></div>`;
+
+        platformSpawnPoint += random(300, 600);
+    } 
+
+    player = select('.player');
+    boss = select('.boss');  
+}
+
 /*
     Инициализация
  */
@@ -632,6 +677,8 @@ const init = () => {
     gameZoneStats.center = gameZoneStats.width / 2;
 
     enemiesSpawn.spawnPosX = gameZoneStats.width - enemiesStats.width;
+
+    spawnPlatforms();
 };
 
 /*
@@ -663,6 +710,9 @@ const sprites = {
 
     boss_left: "assets/img/sprites/boss_left.png",
     boss_right: "assets/img/sprites/boss_right.png",
+
+    platform_ground: "assets/img/sprites/platform_1.png",
+    platform_dirt: "assets/img/sprites/platform_2.png",
 };
 
 
@@ -697,7 +747,8 @@ let player,
         status: false,
         height: 200,
         finalPos: 0,
-        speed: 15
+        speed: 15,
+        currentPlatform: false
     },
     playerWeapon = {
         type: 'impulse',
@@ -711,7 +762,9 @@ let player,
         speed: 5,
         width: 520 / 4,
         height: 176,
-        killAward: 100
+        killAward: 100,
+        bgRightPos: 0,
+        bgLeftPos: 0
     },
     enemiesSpawn = {
         spawnPosX: 0,
@@ -738,6 +791,11 @@ let player,
     gameZoneStats = {
         width: gameZone.getBoundingClientRect().width,
         center: 0
+    },
+    platformStats = {
+        width: 256,
+        height: 64,
+        count: 4
     },
     timer = {
         minutes: 0,

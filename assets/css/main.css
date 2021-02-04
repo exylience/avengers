@@ -277,6 +277,7 @@ th, td {
 
 .player-info, .boss-info {
     width: 430px;
+    transition: .3s ease all;
 }
 
 .player__profile, .boss__profile {
@@ -406,6 +407,15 @@ th, td {
 /**** Объекты ****/
 .bullet {
     position: absolute;
+}
+
+.platform {
+    position: absolute;
+    top: -50px;
+    width: 256px;
+    height: 64px;
+    z-index: -1;
+    box-shadow: 0 100px 50px 10px rgba(0, 0, 0, .2)
 }
 
 

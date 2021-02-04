@@ -343,7 +343,7 @@ th, td {
     float: right;
 }
 
-.hp-line {
+.hp-line, .boss-hp-line {
     width: 100%;
     height: 30px;
     line-height: 30px;
@@ -356,7 +356,7 @@ th, td {
     transition: .3s linear;
 }
 
-.hp-count {
+.hp-count, .boss-hp-count {
     top: 0;
     left: 0;
     background: transparent;
@@ -396,6 +396,11 @@ th, td {
 .enemy {
     position: absolute;
     top: 0;
+}
+
+.boss {
+    position: absolute;
+    top: -50px;
 }
 
 /**** Объекты ****/

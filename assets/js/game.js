@@ -54,18 +54,44 @@ $('.form__btn[name="start"]').click(function (e) {
 
         // в зависимости от выбранного персонажа меняем изображение профиля
         if (playerStats.character === 1) {
-            $('.character__img').attr({
+            $('.player__profile').attr({
                 src: sprites.im_profile,
             });
+
+            $('.play__btn').removeClass('ca');
+            $('.play__btn').addClass('im');
+
+            $('.end-screen hr').removeClass('ca');
+            $('.end-screen hr').addClass('im');
+
+            $('.end-points').removeClass('ca');
+            $('.end-points').addClass('im');
+
+            $('.records').removeClass('ca');
+            $('.records').addClass('im');
         } else {
-            $('.character__img').attr({
+            $('.player__profile').attr({
                 src: sprites.ca_profile,
             });
+
+            $('.play__btn').removeClass('im');
+            $('.play__btn').addClass('ca');
+
+            $('.end-screen hr').removeClass('im');
+            $('.end-screen hr').addClass('ca');
+
+            $('.end-points').removeClass('im');
+            $('.end-points').addClass('ca');
+
+            $('.records').removeClass('im');
+            $('.records').addClass('ca');
         }
 
         // выводим нужные данные в интерфейс
         $('.player__name').text(playerStats.name);
         $('.points').text(playerStats.points);
+        $('.hp-count').text(`${playerStats.hp} HP`);
+        select('.hp-line').style.width = `${playerStats.hp}%`;
 
         // закрываем стартовый экран
         $('.blur').addClass('hidden');
@@ -201,13 +227,33 @@ const startIntervals = () => {
     intervals.enemies.spawn = setInterval(() => {
         const enemyCharacter = random(1, 2), // рандомно выбираем персонажа врага: 1 - Смерть, 2 - Дарт Мол
             enemySprite = (enemyCharacter === 1) ? sprites.enemy_death_left : sprites.enemy_maul_left,
-            enemiesCount = select('.enemy', true);
+            enemiesCount = select('.enemy', true).length,
+            bossCount = select('.boss', true).length;
 
-        if (enemiesCount.length < 5) {
+        if (
+            enemiesCount < 5 &&
+            playerStats.kills % 10 !== 0
+        ) {
             gameZone.innerHTML += `<div class="enemy left" style="background-image: url(${enemySprite}); left: ${enemiesSpawn.spawnPosX}px; width: ${enemiesStats.width}px; height: ${enemiesStats.height}px"></div>`;
+        } 
 
-            player = select('.player');
+        if (
+            (playerStats.kills > 0 && playerStats.kills % 10 === 0) &&
+            bossCount === 0
+        ) {
+            bossStats.hp = 1000;
+            bossStats.sprites.pos = 0;
+
+            gameZone.innerHTML += `<div class="boss left" style="background-image: url(${bossStats.sprites.left}); left: ${enemiesSpawn.spawnPosX}px; width: ${bossStats.width}px; height: ${bossStats.height}px"></div>`;
+    
+            $('.boss-hp-count').text(`${bossStats.hp} HP`);
+            select('.boss-hp-line').style.width = `${bossStats.hp / 10}%`;
+            $('.boss-info').removeClass('hidden');            
+
+            boss = select('.boss');
         }
+
+        player = select('.player');
     }, enemiesSpawn.spawnInterval);
 
     intervals.enemies.move = setInterval(() => {
@@ -306,6 +352,89 @@ const startIntervals = () => {
     //     });
     // }, 200);
 
+    intervals.boss.move = setInterval(() => {
+        let bossCount = select('.boss', true).length,
+            bulletsRight = select('.bullet.right', true),
+            bulletsLeft = select('bullet.left', true);
+
+        if (bossCount !== 0) {
+            if (bossMove.right) {
+                if (boss.getBoundingClientRect().left >= gameZoneStats.width - bossStats.width) {
+                    bossMove.right = false;
+                    boss.style.backgroundImage = `url(${bossStats.sprites.left})`;
+                } else boss.style.left = `${boss.getBoundingClientRect().left + bossMove.speed}px`;
+
+                if (boss.getBoundingClientRect().right >= player.getBoundingClientRect().left) {
+                    playerStats.pos.x += 300;
+                    player.style.left = `${playerStats.pos.x}px`;
+                    changeHP(-bossStats.damage);
+                }
+
+                bulletsLeft.forEach((bullet) => {
+                    if (bullet.getBoundingClientRect().left <= boss.getBoundingClientRect().right) {
+                        gameZone.removeChild(bullet);
+                        
+                        bossStats.hp -= playerWeapon.damage;
+
+                        $('.boss-hp-count').text(`${bossStats.hp} HP`);
+                        select('.boss-hp-line').style.width = `${bossStats.hp / 10}%`;
+
+                        if (bossStats.hp <= 0) {
+                            gameZone.removeChild(boss);
+                            changePoints(bossStats.killAward);
+                            playerStats.kills ++;
+
+                            $('.boss-info').addClass('hidden');
+                        }
+                    }
+                });
+            } else {
+                if (boss.getBoundingClientRect().left <= 0) {
+                    bossMove.right = true;
+                    boss.style.backgroundImage = `url(${bossStats.sprites.right})`;
+                } else boss.style.left = `${boss.getBoundingClientRect().left - bossMove.speed}px`;
+
+                if (boss.getBoundingClientRect().left <= player.getBoundingClientRect().right) {
+                    playerStats.pos.x -= 300;
+                    player.style.left = `${playerStats.pos.x}px`;
+                    changeHP(-bossStats.damage);
+                }
+
+                bulletsRight.forEach((bullet) => {
+                    if (bullet.getBoundingClientRect().right >= boss.getBoundingClientRect().left) {
+                        gameZone.removeChild(bullet);
+                        
+                        bossStats.hp -= playerWeapon.damage;
+
+                        $('.boss-hp-count').text(`${bossStats.hp} HP`);
+                        select('.boss-hp-line').style.width = `${bossStats.hp / 10}%`;
+
+                        if (bossStats.hp <= 0) {
+                            gameZone.removeChild(boss);
+                            changePoints(bossStats.killAward);
+                            playerStats.kills ++;
+
+                            $('.boss-info').addClass('hidden');
+                        }
+                    }
+                });
+            }
+        }
+    }, fps);
+
+    intervals.boss.sprite = setInterval(() => {
+        let bossCount = select('.boss', true).length;
+
+        if (bossCount !== 0) {
+            if (bossMove.right) {
+                bossStats.sprites.pos -= bossStats.width;
+                boss.style.backgroundPositionX = `${bossStats.sprites.pos}px`;
+            } else {
+                bossStats.sprites.pos += bossStats.width;
+                boss.style.backgroundPositionX = `${bossStats.sprites.pos}px`;
+            }
+        }
+    }, 300);
 
     intervals.timer = setInterval(() => {
         timer.seconds ++;
@@ -367,10 +496,20 @@ const attack = () => {
     }
 
     player = select('.player');
+    boss = select('.boss');
 };
 
 const changeHP = (hp) => {
-    playerStats.hp += hp;
+    if (
+        hp > 0 && playerStats.hp <= 90 ||
+        hp < 0
+    ) {
+        playerStats.hp += hp;
+    } else if (
+        hp > 0 && 
+        (playerStats.hp > 90 && playerStats.hp <= 100)
+    ) playerStats.hp = 100;
+    
 
     $('.hp-count').text(`${playerStats.hp} HP`);
     select('.hp-line').style.width = `${playerStats.hp}%`;
@@ -565,7 +704,8 @@ let player,
         sprite: '',
         speed: 10,
         width: 0,
-        height: 0
+        height: 0,
+        damage: 100
     },
     enemiesStats = {
         speed: 5,
@@ -576,6 +716,23 @@ let player,
     enemiesSpawn = {
         spawnPosX: 0,
         spawnInterval: 2000
+    },
+    boss,
+    bossStats = {
+        sprites: {
+            left: sprites.boss_left,
+            right: sprites.boss_right,
+            pos: 0
+        },
+        width: 640 / 4,
+        height: 216,
+        hp: 1000,
+        damage: 25,
+        killAward: 1000
+    },
+    bossMove = {
+        right: false,
+        speed: 3
     },
     gameZone = select('.game-zone'),
     gameZoneStats = {
@@ -595,6 +752,10 @@ let player,
         },
         enemies: {
             spawn: '',
+            move: '',
+            sprite: ''
+        },
+        boss: {
             move: '',
             sprite: ''
         },
@@ -635,6 +796,26 @@ $('.character.ca').click(function () {
 
     $('.form__btn').removeClass('im');
     $('.form__btn').addClass('ca');
+});
+
+/*
+    Начать игру заново
+*/
+$('.play__btn[name="again"]').click(function () {
+    gameZone.innerHTML = '';
+
+    timer.minutes = 0;
+    timer.seconds = 0;
+
+    playerStats.sprites.pos = 0;
+
+    playerStats.pos.x = 0;
+    playerStats.pos.y = 0;
+
+    playerStats.character = 1;
+
+    $('.end-screen').addClass('hidden');
+    $('.start-screen').removeClass('hidden');
 });
 
 game();

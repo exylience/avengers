@@ -418,6 +418,14 @@ th, td {
     box-shadow: 0 100px 50px 10px rgba(0, 0, 0, .2)
 }
 
+.medkit {
+    position: absolute;
+    top: -124px;
+    width: 74px;
+    height: 74px;
+    z-index: -1;
+}
+
 
 /**** Прочие стили ****/
 .hidden {

@@ -154,12 +154,22 @@ const startIntervals = () => {
                     document.body.style.backgroundPositionX = `${bgPos}px`;
 
 
-                    let platforms = select('.platform', true);
-                    let enemies = select('.enemy', true);
+                    let platforms = select('.platform', true),
+                        medkits = select('.medkit', true),
+                        enemies = select('.enemy', true);
 
                     platforms.forEach(platform => {
                         platform.style.left = `${platform.getBoundingClientRect().left - playerRun.step}px`; 
+
+                        if (platform.getBoundingClientRect().right < 0) gameZone.removeChild(platform);
                     });
+
+                    medkits.forEach(medkit => {
+                        medkit.style.left = `${medkit.getBoundingClientRect().left - playerRun.step}px`; 
+
+                        if (medkit.getBoundingClientRect().right < 0) gameZone.removeChild(medkit);
+                    });
+
 
                     enemies.forEach(enemy => {
                         enemy.style.left = `${enemy.getBoundingClientRect().left - playerRun.step}px`; 
@@ -200,6 +210,20 @@ const startIntervals = () => {
                 playerStats.pos.y -= playerJump.speed;
                 player.style.top = `${playerStats.pos.y}px`;
             } else playerJump.status = false;
+
+            let medkits = select('.medkit', true);
+            
+            medkits.forEach(medkit => {
+                if (
+                    medkit.getBoundingClientRect().bottom >= player.getBoundingClientRect().top &&
+                    medkit.getBoundingClientRect().left <= player.getBoundingClientRect().right &&
+                    medkit.getBoundingClientRect().right >= player.getBoundingClientRect().left &&
+                    playerStats.hp !== 100
+                ) {
+                    gameZone.removeChild(medkit);
+                    changeHP(medkitStats.hpBonus);
+                }
+            })
         } else {
             if (playerStats.pos.y < 0) {
                 playerStats.pos.y += playerJump.speed;
@@ -642,13 +666,27 @@ const spawnPlatforms = () => {
     let platformSpawnPoint = 0;
 
     for (let i = 0; i <= platformStats.count; i++) {
-        console.log(i)
         let platformType = random(1, 2);
 
         gameZone.innerHTML += `<div class="platform" style="background-image: url(${ (platformType === 1) ? sprites.platform_ground : sprites.platform_dirt }); left: ${ platformSpawnPoint }px;"></div>`;
 
         platformSpawnPoint += random(300, 600);
     } 
+
+    player = select('.player');
+    boss = select('.boss');  
+}
+
+const spawnMedkits = () => {
+    let platforms = select('.platform', true);
+
+    platforms.forEach((platform, index) => {
+        let spawnOrNot = random(0, 1);
+
+        if (spawnOrNot === 1) {
+            gameZone.innerHTML += `<div class="medkit" style="background-image: url(${sprites.medkit}); left: ${platform.getBoundingClientRect().left + platformStats.width / 2 - medkitStats.width / 2}px"></div>`
+        }
+    });
 
     player = select('.player');
     boss = select('.boss');  
@@ -679,6 +717,7 @@ const init = () => {
     enemiesSpawn.spawnPosX = gameZoneStats.width - enemiesStats.width;
 
     spawnPlatforms();
+    spawnMedkits();
 };
 
 /*
@@ -713,6 +752,8 @@ const sprites = {
 
     platform_ground: "assets/img/sprites/platform_1.png",
     platform_dirt: "assets/img/sprites/platform_2.png",
+
+    medkit: "assets/img/sprites/medkit.png"
 };
 
 
@@ -796,6 +837,12 @@ let player,
         width: 256,
         height: 64,
         count: 4
+    },
+    medkitStats = {
+        width: 74,
+        height: 74,
+        count: 2,
+        hpBonus: 10
     },
     timer = {
         minutes: 0,

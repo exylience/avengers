@@ -107,7 +107,7 @@ $('.form__btn[name="start"]').click(function (e) {
 const controls = () => {
     // отлавливаем моменты нажатия на кнопку
     document.body.addEventListener('keydown', (e) => {
-        //console.log(e.keyCode);
+        console.log(e.keyCode);
 
         switch (e.keyCode) {
             case 39: // нажата стрелка вправо
@@ -123,6 +123,9 @@ const controls = () => {
                 break;
             case 32: // нажат пробел
                 if (select('.bullet', true).length <= 1) attack();
+                break;
+            case 27:
+                togglePause();
                 break;
         }
     });
@@ -666,9 +669,14 @@ const spawnPlatforms = () => {
     let platformSpawnPoint = 0;
 
     for (let i = 0; i <= platformStats.count; i++) {
-        let platformType = random(1, 2);
+        let platformType = random(1, 2),
+            spawnMedkitOrNot = random(0, 1);
 
         gameZone.innerHTML += `<div class="platform" style="background-image: url(${ (platformType === 1) ? sprites.platform_ground : sprites.platform_dirt }); left: ${ platformSpawnPoint }px;"></div>`;
+
+        if (spawnMedkitOrNot === 1 && select('.medkit', true).length < 2) {
+            gameZone.innerHTML += `<div class="medkit" style="background-image: url(${ sprites.medkit }); left: ${ platformSpawnPoint + platformStats.width / 2 - medkitStats.width / 2}px"></div>`
+        }
 
         platformSpawnPoint += random(300, 600);
     } 
@@ -677,19 +685,20 @@ const spawnPlatforms = () => {
     boss = select('.boss');  
 }
 
-const spawnMedkits = () => {
-    let platforms = select('.platform', true);
+const togglePause = () => {
+    pause = !pause;
 
-    platforms.forEach((platform, index) => {
-        let spawnOrNot = random(0, 1);
+    if (pause) {
+        stopIntervals();
 
-        if (spawnOrNot === 1) {
-            gameZone.innerHTML += `<div class="medkit" style="background-image: url(${sprites.medkit}); left: ${platform.getBoundingClientRect().left + platformStats.width / 2 - medkitStats.width / 2}px"></div>`
-        }
-    });
+        $('.blur').removeClass('hidden');
+        $('.pause-screen').removeClass('hidden');
+    } else {
+        startIntervals();
 
-    player = select('.player');
-    boss = select('.boss');  
+        $('.blur').addClass('hidden');
+        $('.pause-screen').addClass('hidden');
+    }
 }
 
 /*
@@ -717,7 +726,6 @@ const init = () => {
     enemiesSpawn.spawnPosX = gameZoneStats.width - enemiesStats.width;
 
     spawnPlatforms();
-    spawnMedkits();
 };
 
 /*
@@ -836,7 +844,7 @@ let player,
     platformStats = {
         width: 256,
         height: 64,
-        count: 4
+        count: 10
     },
     medkitStats = {
         width: 74,
@@ -867,7 +875,8 @@ let player,
         timer: ''
     },
     bgPos = 0,
-    fps = 1000 / 60;
+    fps = 1000 / 60
+    pause = false;
 
 /*
     Механика выбора игрового персонажа
@@ -919,8 +928,10 @@ $('.play__btn[name="again"]').click(function () {
 
     playerStats.character = 1;
 
+    playerStats.kills = 0;
+
     $('.end-screen').addClass('hidden');
     $('.start-screen').removeClass('hidden');
 });
 
-game();
+//game();

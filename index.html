@@ -8,13 +8,14 @@
 
         <title>Avengers</title>
 
+        <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
         <link rel="stylesheet" href="assets/css/fonts.css">
         <link rel="stylesheet" href="assets/css/main.css">
     </head>
 
     <body>
-        <div class="blur hidden"></div>
-        <div class="start-screen hidden">
+        <div class="blur"></div>
+        <div class="start-screen">
             <h1 class="title">Мстители: Кризис на Земле X</h1>
             <hr class="im" noshade="">
             <p class="description">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ad aliquid asperiores
@@ -53,6 +54,11 @@
             <button class="play__btn im" name="again">Играть ещё раз</button>
         </div>
 
+        <div class="pause-screen hidden">
+            <h1 class="pause-title">Чайная пауза</h1>
+            <p class="pause-info">Нажмите Esc, чтобы продолжить</p>
+        </div>
+
         <div class="game-top">
             <div class="player-info">
                 <div class="player-stats">
@@ -77,7 +83,7 @@
             <div class="boss-info hidden">
                 <div class="boss-stats">
                     <div class="boss-text">
-                        <h2 class="boss__name">Говяжий дошик</h2>
+                        <h2 class="boss__name">Красный Халк</h2>
                     </div>
 
                     <img class="boss__profile" src="assets/img/sprites/boss_profile.png" alt="Player">

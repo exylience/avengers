@@ -6,21 +6,33 @@
               content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-        <title>Avengers</title>
+        <title>Мстители: Кризис на Земле X</title>
 
         <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+
+        <!-- Подключение стилей -->
         <link rel="stylesheet" href="assets/css/fonts.css">
         <link rel="stylesheet" href="assets/css/main.css">
     </head>
 
     <body>
+        <!-- Блок для размытия фона -->
         <div class="blur"></div>
+
+        <!-- Стартовый экран -->
         <div class="start-screen">
             <h1 class="title">Мстители: Кризис на Земле X</h1>
             <hr class="im" noshade="">
-            <p class="description">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ad aliquid asperiores
-                assumenda distinctio eaque earum, ex fugiat, hic illum minima minus mollitia odit officiis optio porro
-                quasi reprehenderit totam voluptates?</p>
+            <p class="description">
+                Вам предстоит сразиться с загадочными врагами, грозящими уничтожить Землю. <br><br>
+
+                <ul class="controls-list">
+                    <li>бег - <span class="controls-key">стрелки влево и вправо</span></li>
+                    <li>прыжок - <span class="controls-key">стрелка вверх</span></li>
+                    <li>атака - <span class="controls-key">пробел</span></li>
+                    <li>пауза - <span class="controls-key">клавиша Esc</span></li>
+                </ul> 
+            </p>
 
             <div class="character-picker">
                 <div class="character im picked">
@@ -44,6 +56,7 @@
             </form>
         </div>
 
+        <!-- Экран с результатами игры -->
         <div class="end-screen hidden">
             <h1 class="title">Конец игры</h1>
             <h3 class="end-score">Ваш счёт: <span class="end-points im">100500</span></h3>
@@ -54,12 +67,16 @@
             <button class="play__btn im" name="again">Играть ещё раз</button>
         </div>
 
+        <!-- Экран паузы -->
         <div class="pause-screen hidden">
             <h1 class="pause-title">Чайная пауза</h1>
             <p class="pause-info">Нажмите Esc, чтобы продолжить</p>
         </div>
 
+        <!-- Интерфейс игры -->
         <div class="game-top">
+
+            <!-- Информация об игроке -->
             <div class="player-info">
                 <div class="player-stats">
                     <img class="player__profile" src="assets/img/sprites/iron-man_profile.png" alt="Player">
@@ -76,10 +93,12 @@
                 </div>
             </div>
 
+            <!-- Таймер -->
             <h2 class="timer">
                 <span class="minutes">00</span>:<span class="seconds">00</span>
             </h2>
 
+            <!-- Информация о боссе -->
             <div class="boss-info hidden">
                 <div class="boss-stats">
                     <div class="boss-text">
@@ -96,8 +115,10 @@
             </div>
         </div>
 
+        <!-- Игровая зона -->
         <div class="game-zone"></div>
 
+        <!-- Подключение скриптов -->
         <script src="assets/js/jquery-3.4.1.min.js"></script>
         <script src="assets/js/game.js"></script>
     </body>

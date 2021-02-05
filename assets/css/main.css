@@ -40,7 +40,7 @@ button {
     transition: .3s ease;
 }
 
-/**** Стартовый экран ****/
+/**** Стартовый экран, экран окончания игры, экран паузы ****/
 .start-screen, .end-screen {
     opacity: 1;
     visibility: visible;
@@ -54,6 +54,14 @@ button {
     background-color: #fff;
     z-index: 3;
     transition: .3s ease;
+}
+
+.controls-list {
+    margin-left: 50px;
+}
+
+.controls-key {
+    font-weight: 600;
 }
 
 .pause-screen {

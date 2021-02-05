@@ -17,21 +17,21 @@ const random = (min, max) => {
     Функция для отправки запроса к API
 */
 const f = async (url, method, data = null) => {
-    const API = 'http://pocket-diary.ru/api';
+    const API = 'http://pocket-diary.ru/api';  // адрес хоста
 
     let options = {
-        method: method.toUpperCase(),
-        mode: 'cors',
-        headers: {
-            'Content-Type': "application/json"
+        method: method.toUpperCase(), // метод запроса
+        mode: 'cors', 
+        headers: { // заголовки
+            'Content-Type': "application/json" // данные отправляются в формате JSON
         }
     };
 
-    if (method === "POST") options.body = data;
+    if (method === "POST") options.body = data; // если метод POST, то отправляем некоторые данные
 
-    let response = await fetch(`${API}${url}`, options);
-
-    return {
+    let response = await fetch(`${API}${url}`, options); // выполняем запрос, получаем данные
+ 
+    return { // возвращаем данные из ответа + статус код
         body: await response.json(),
         code: response.status
     };
@@ -107,8 +107,6 @@ $('.form__btn[name="start"]').click(function (e) {
 const controls = () => {
     // отлавливаем моменты нажатия на кнопку
     document.body.addEventListener('keydown', (e) => {
-        console.log(e.keyCode);
-
         switch (e.keyCode) {
             case 39: // нажата стрелка вправо
                 playerRun.status = true;
@@ -147,12 +145,13 @@ const controls = () => {
     Интервалы
  */
 const startIntervals = () => {
-    intervals.player.run = setInterval(() => {
-        if (playerRun.status) {
-            if (playerRun.right) {
-                player.style.backgroundImage = `url(${playerStats.sprites.right})`;
+    intervals.player.run = setInterval(() => {  // бег игрока
+        if (playerRun.status) { // если игрок движется 
+            if (playerRun.right) { // если игрок движется вправо
+                player.style.backgroundImage = `url(${playerStats.sprites.right})`; // изменяем спрайт
 
-                if (playerStats.pos.x >= gameZoneStats.center) {
+                if (playerStats.pos.x >= gameZoneStats.center) { // если персонаж добежал до центра игровой зоны
+                    // двигаем фон и другие статичные элементы
                     bgPos -= playerRun.step;
                     document.body.style.backgroundPositionX = `${bgPos}px`;
 
@@ -173,88 +172,102 @@ const startIntervals = () => {
                         if (medkit.getBoundingClientRect().right < 0) gameZone.removeChild(medkit);
                     });
 
-
                     enemies.forEach(enemy => {
-                        enemy.style.left = `${enemy.getBoundingClientRect().left - playerRun.step}px`; 
+                        enemy.style.left = `${enemy.getBoundingClientRect().left - playerRun.step / 2}px`; 
                     });
 
-                } else {
+                    enemy.style.left = `${boss.getBoundingClientRect().left - playerRun.step}px`; 
+
+                } else { // если игрок не добежал до середины
+                    // передвигаем персонажа по игровой зоне
                     playerStats.pos.x += playerRun.step;
                     player.style.left = `${playerStats.pos.x}px`;
                 }
-            } else {
-                player.style.backgroundImage = `url(${playerStats.sprites.left})`;
+            } else { // если игрок движется влево
+                player.style.backgroundImage = `url(${playerStats.sprites.left})`; // меняем спрайт игрока
 
-                if (playerStats.pos.x > 0) {
+                if (playerStats.pos.x > 0) { // проверка положения игрока, чтобы он не выбежал за левую границу игровой зоны
                     playerStats.pos.x -= playerRun.step;
                     player.style.left = `${playerStats.pos.x}px`;
                 }
             }
         }
     }, fps);
-    intervals.player.sprite = setInterval(() => {
-        if (playerRun.status) {
-            if (playerRun.right) {
+    intervals.player.sprite = setInterval(() => {  // движение модельки игрока
+        if (playerRun.status) { // если игрок движется
+            if (playerRun.right) { // игрок движется вправо
+                // меняем положение спрайта
                 playerStats.sprites.pos -= playerStats.width;
                 player.style.backgroundPositionX = `${playerStats.sprites.pos}px`;
 
                 playerStats.sprites.pos = (playerStats.sprites.pos < -512) ? 0 : playerStats.sprites.pos;
-            } else {
+            } else { // игрок движется влево
+                // меняем положение спрайта
                 playerStats.sprites.pos += playerStats.width;
                 player.style.backgroundPositionX = `${playerStats.sprites.pos}px`;
 
                 playerStats.sprites.pos = (playerStats.sprites.pos > 512) ? 0 : playerStats.sprites.pos;
             }
         }
-    }, 200);
-    intervals.player.jump = setInterval(() => {
-        if (playerJump.status) {
-            if (playerStats.pos.y > playerJump.finalPos) {
-                playerStats.pos.y -= playerJump.speed;
-                player.style.top = `${playerStats.pos.y}px`;
-            } else playerJump.status = false;
+    }, 200); 
+    intervals.player.jump = setInterval(() => { // прыжок игрока
+        if (playerJump.status) { // если игрок прыгнул
+            // меняем положение игрока по оси Y вверх
 
-            let medkits = select('.medkit', true);
+            if (playerStats.pos.y > playerJump.finalPos) { // если игрок не достиг крайней верхней точки прыжка 
+                playerStats.pos.y -= playerJump.speed; // перемещаем игрока вверх
+                player.style.top = `${playerStats.pos.y}px`; 
+            } else playerJump.status = false; // если игрок достиг крайней верхней точки прыжка, останавливаем прыжок
+
+            let medkits = select('.medkit', true); // получаем все аптечки в игровой зоне
             
-            medkits.forEach(medkit => {
+            medkits.forEach(medkit => { // для каждой аптечки проверяем, коснулся ли игрок её
                 if (
                     medkit.getBoundingClientRect().bottom >= player.getBoundingClientRect().top &&
                     medkit.getBoundingClientRect().left <= player.getBoundingClientRect().right &&
                     medkit.getBoundingClientRect().right >= player.getBoundingClientRect().left &&
                     playerStats.hp !== 100
-                ) {
+                ) { 
+                    // елси да, то прибавляем HP, а аптечку убираем из игровой зоны
                     gameZone.removeChild(medkit);
                     changeHP(medkitStats.hpBonus);
                 }
             })
-        } else {
-            if (playerStats.pos.y < 0) {
-                playerStats.pos.y += playerJump.speed;
+        } else { // если игрок падает
+            if (playerStats.pos.y < 0) { // проверяем, достиг ли игрок землли
+                // если нет, то меняем положение игрока по оси Y вниз
+                playerStats.pos.y += playerJump.speed; 
                 player.style.top = `${playerStats.pos.y}px`;
             }
         }
     }, fps);
-    intervals.player.bullets = setInterval(() => {
-        let bulletsLeft = select('.bullet.left', true),
-            bulletsRight = select('.bullet.right', true);
+    intervals.player.bullets = setInterval(() => { // стрельба
+        // получаем все "пули", летящие ...
+        let bulletsLeft = select('.bullet.left', true), // влево
+            bulletsRight = select('.bullet.right', true); // вправо
 
-        const bulletStartPos = playerStats.pos.x;
+        const bulletStartPos = playerStats.pos.x; // начальная позиция пули
 
-        bulletsLeft.forEach((bullet) => {
+        bulletsLeft.forEach((bullet) => { // для каждой пули, летящей влево
+            // изменяем значение по оси X влево
             bullet.style.left = `${bullet.getBoundingClientRect().left - playerWeapon.speed}px`;
 
+            // если пуля пролетела 300 пикселей, выполняем определенное действие
             if (
                 bullet.getBoundingClientRect().left < bulletStartPos - 350
             ) {
+                // если персонаж - Железный человек
                 if (playerStats.character === 1) {
-                    gameZone.removeChild(bullet);
-                } else {
+                    gameZone.removeChild(bullet); // убираем пулю из игровой зоны
+                } else { // если персонаж - Капитан Америка
+                    // меняем направление полета пули
                     $(bullet).removeClass('left');
                     $(bullet).addClass('right');
                     $(bullet).addClass('returned');
                 }
             }
 
+            // для Капитана Америки - если пуля возвращается и долетает до игрока, убираем её с игрового поля
             if (
                 bullet.getBoundingClientRect().left < player.getBoundingClientRect().left + bullet.getBoundingClientRect().width &&
                 ($(bullet).hasClass('returned') && $(bullet).hasClass('left')) &&
@@ -263,6 +276,7 @@ const startIntervals = () => {
             
         });
 
+        // все то же самое, только для пуль, летящих вправо
         bulletsRight.forEach((bullet) => {
             bullet.style.left = `${bullet.getBoundingClientRect().left + playerWeapon.speed}px`;
 
@@ -287,27 +301,29 @@ const startIntervals = () => {
     }, fps);
 
 
-    intervals.enemies.spawn = setInterval(() => {
+    intervals.enemies.spawn = setInterval(() => { // спавн врагов
         const enemyCharacter = random(1, 2), // рандомно выбираем персонажа врага: 1 - Смерть, 2 - Дарт Мол
             enemySprite = (enemyCharacter === 1) ? sprites.enemy_death_left : sprites.enemy_maul_left,
-            enemiesCount = select('.enemy', true).length,
-            bossCount = select('.boss', true).length;
+            enemiesCount = select('.enemy', true).length, // получаем число врагов в игровой зоне
+            bossCount = select('.boss', true).length; // получаем число боссов в игровой зоне
         if (
-            enemiesCount < 5 &&
+            enemiesCount < 5 && // если врагов меньше, чем 5 
             (playerStats.kills === 0 || playerStats.kills % 10 !== 0)
-        ) {
+        ) { // спавним врага
             gameZone.innerHTML += `<div class="enemy left" style="background-image: url(${enemySprite}); left: ${enemiesSpawn.spawnPosX}px; width: ${enemiesStats.width}px; height: ${enemiesStats.height}px"></div>`;
         } 
 
+        // на каждое 10 убийство спавним босса (при условии, что босс уже не в игровой зоне)
         if (
             (playerStats.kills > 0 && playerStats.kills % 10 === 0) &&
             bossCount === 0
         ) {
-            bossStats.hp = 1000;
+            bossStats.hp = 1000; // обновляем HP босса
             bossStats.sprites.pos = 0;
 
             gameZone.innerHTML += `<div class="boss left" style="background-image: url(${bossStats.sprites.left}); left: ${enemiesSpawn.spawnPosX + bossStats.width}px; width: ${bossStats.width}px; height: ${bossStats.height}px"></div>`;
     
+            // обновляем интерфейс
             $('.boss-hp-count').text(`${bossStats.hp} HP`);
             select('.boss-hp-line').style.width = `${bossStats.hp / 10}%`;
             $('.boss-info').removeClass('hidden');            

@@ -168,51 +168,6 @@ button {
 }
 
 
-/**** Таблица с рекордами ****/
-.records {
-    width: 100%;
-    border: 1px solid;
-}
-
-.records-desc {
-    border-top: 1px solid;
-}
-
-th, td {
-    text-align: center;
-}
-
-.records-header, .records-desc {
-    padding: 5px 0;
-}
-
-.records-header.place {
-    width: 15%;
-}
-
-.records-row.current > .place, .records-row.current > .player-name {
-    font-weight: 600;
-}
-
-.records-row.im.current > .place {
-    color: #ff332c;
-}
-
-.records-row.ca.current > .place {
-    color: #3673ff;
-}
-
-.records-header:not(:last-child), .records-desc:not(:last-child) {
-    border-right: 1px solid;
-}
-
-.records.im, .records-header.im, .records-desc.im {
-    border-color: #ff332c;
-}
-
-.records.ca, .records-header.ca, .records-desc.ca {
-    border-color: #3673ff;
-}
 
 /**** Формы *****/
 .form {

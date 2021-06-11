@@ -13,29 +13,6 @@ const random = (min, max) => {
     return Math.round(rand);  
 };
 
-/*
-    Функция для отправки запроса к API
-*/
-const f = async (url, method, data = null) => {
-    const API = 'http://pocket-diary.ru/api';  // адрес хоста
-
-    let options = {
-        method: method.toUpperCase(), // метод запроса
-        mode: 'cors', 
-        headers: { // заголовки
-            'Content-Type': "application/json" // данные отправляются в формате JSON
-        }
-    };
-
-    if (method === "POST") options.body = data; // если метод POST, то отправляем некоторые данные
-
-    let response = await fetch(`${API}${url}`, options); // выполняем запрос, получаем данные
- 
-    return { // возвращаем данные из ответа + статус код
-        body: await response.json(),
-        code: response.status
-    };
-};
 
 /*
     Старт игры по нажатию на кнопку "Начать игру"
@@ -100,6 +77,7 @@ $('.form__btn[name="start"]').click(function (e) {
         game(); // начинаем игру
     }
 });
+
 
 /*
     Управление
@@ -597,88 +575,11 @@ const changePoints = (points) => {
 const gameOver = async () => {
     stopIntervals();
 
-    $('.end-points').text(playerStats.points * 30 - (timer.minutes * 60 + timer.seconds));
-
-    let resultId = await sendResult(),
-        results = await getAllResults();
-
-    showResults(resultId, results);
+    $('.end-points').text(playerStats.points * 30 + (timer.minutes * 60 + timer.seconds));
 
     $('.blur').removeClass('hidden');
     $('.end-screen').removeClass('hidden');
 };
-
-
-const sendResult = async () => {
-    const data = {
-        name: playerStats.name,
-        score: playerStats.points * 30 - (timer.minutes * 60 + timer.seconds)
-    };
-
-    let response = await f('/game', 'POST', JSON.stringify(data));
-
-    return response.body.record.id;
-};
-
-const getAllResults = async () => {
-    let response = await f('/game', 'GET');
-
-    return response.body.records;
-};
-
-const showResults = (playerResultId, results) => {
-    let resultsTable = select('.records');
-
-    resultsTable.innerHTML = ` 
-        <tr class="records-row ${ (playerStats.character === 1) ? 'im' : 'ca' }">
-            <th class="records-header ${ (playerStats.character === 1) ? 'im' : 'ca' } place">Место</th>
-            <th class="records-header ${ (playerStats.character === 1) ? 'im' : 'ca' } player-name">Игрок</th>
-            <th class="records-header ${ (playerStats.character === 1) ? 'im' : 'ca' } player-score">Счёт</th>
-        </tr>
-    `;
-
-    results.forEach((result, index) => {
-        if (
-            result.id !== playerResultId &&
-            index < 9
-        ) {
-            resultsTable.innerHTML += `
-                <tr class="records-row ${ (playerStats.character === 1) ? 'im' : 'ca' }">
-                    <td class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } place">${ index + 1 }</td>
-                    <td class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } player-name">${ result.name }</td>
-                    <th class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } player-score">${ result.score }</th>
-                </tr>
-            `;
-        } else if (
-            result.id === playerResultId &&
-            index < 9
-        ) {
-            resultsTable.innerHTML += `
-                <tr class="records-row current ${ (playerStats.character === 1) ? 'im' : 'ca' }">
-                    <td class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } place">${ index + 1 }</td>
-                    <td class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } player-name">${ result.name }</td>
-                    <th class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } player-score">${ result.score }</th>
-                </tr>
-            `;
-        } else if (
-            result.id !== playerResultId &&
-            index >= 9
-        ) {
-            return;
-        } else if (
-            result.id === playerResultId &&
-            index >= 9
-        ) {
-            resultsTable.innerHTML += `
-                <tr class="records-row current ${ (playerStats.character === 1) ? 'im' : 'ca' }">
-                    <td class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } place">${ index + 1 }</td>
-                    <td class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } player-name">${ result.name }</td>
-                    <th class="records-desc ${ (playerStats.character === 1) ? 'im' : 'ca' } player-score">${ result.score }</th>
-                </tr>
-            `;
-        }
-    });
-}
 
 
 const spawnPlatforms = () => {
@@ -743,6 +644,7 @@ const init = () => {
 
     spawnPlatforms();
 };
+
 
 /*
     Global game function
@@ -942,12 +844,21 @@ $('.play__btn[name="again"]').click(function () {
     playerStats.pos.x = 0;
     playerStats.pos.y = 0;
 
-    playerStats.character = 1;
-
     playerStats.kills = 0;
 
+    playerStats.hp = 100; // ставим очки здоровья по умолчанию
+    playerStats.points = 0; // обнуляем счёт
+
+    // выводим нужные данные в интерфейс
+    $('.player__name').text(playerStats.name);
+    $('.points').text(playerStats.points);
+    $('.hp-count').text(`${ playerStats.hp } HP`);
+    select('.hp-line').style.width = `${ playerStats.hp }%`;
+
+    game(); // начинаем игру
+
     $('.end-screen').addClass('hidden');
-    $('.start-screen').removeClass('hidden');
+    $('.blur').addClass('hidden');
 });
 
 //game();
